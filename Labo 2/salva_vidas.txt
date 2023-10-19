@@ -1,0 +1,1066 @@
+/*
+PREGRUNTAS PARA EL CRACK DE PABLO :)
+    1) En el caso de que se ejecute el alata y el usuario ponga un id que ya este en uso se debe:
+        a) Advertir que esta pisando un dato y anular la carga.
+        b) Reemplazar el dato pisado por el usuario.
+    2) Como resolvemos el tema de los datos a printea (tema while de el printeo de dato)
+    3) Basicamente una funcion que inprima 
+    
+
+*/
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <time.h>
+#include "tparchivos.h"
+
+struct fechas{
+    int dia;
+    int mes;
+    int anio;
+};
+struct propiedad{
+    int id;
+    struct fechas fechaIngreso;
+    char zona[50];
+    char ciudad[50];
+    int dormitorio;
+    int banios;
+    float sup_total;
+    float sup_cubierta;
+    float precio;
+    char moneda[7];
+    char tipo_propiedad[25];
+    char operacion[25];
+    struct fechas fechaSalida;
+    int estado;
+};
+
+//struct para la sub opción 4 del punto 5 
+struct fechasAux{
+    int dia;
+    int mes;
+    int anio;
+};
+
+/* 
+    ATENCION NO PUDE PONER LAS FUNCIONES EN LA LIBRERIA ASI QUE LAS PONGO ACA 
+    CAMBIAR DESPUES!!!!!!!!!!!!!!!
+    ||
+    \/
+*/
+//Calcula el nro de propiedades en el archivo binario.
+int calcularNumeroPropiedades() {
+    FILE *archivoBinario = fopen("propiedades.dat", "rb");
+    if (archivoBinario == NULL) {
+        perror("Error al abrir el archivo");
+        return -1;
+    }
+
+    // Calcula el tamaño del archivo en bytes
+    fseek(archivoBinario, 0, SEEK_END);
+    long fileSize = ftell(archivoBinario);
+
+    // Calcula el número de propiedades en el archivo
+    int numPropiedades = fileSize / sizeof(struct propiedad);
+
+    fclose(archivoBinario);
+
+    return numPropiedades;
+}
+
+//Comprueba si no estas pisando un dato 
+int Existe(FILE *file, int id) {
+    struct propiedad prop;
+    rewind(file);
+    while (fread(&prop, sizeof(struct propiedad), 1, file)) {
+        if (prop.id == id) {
+            return 1; // ID ya existe
+        }
+    }
+    return 0; // ID no existe
+}
+
+int validarFecha(const struct fechas *date) {
+    int day = date->dia;
+    int month = date->mes;
+    int year = date->anio;
+    // Resto de la función de validación de fecha
+}
+
+// Función para agregar una nueva propiedad con ID personalizado
+void agregarPropiedad(struct propiedad propiedades[], int *totPropiedades, int idPersonalizado) {
+    if (idPersonalizado <= *totPropiedades) {
+        printf("El ID que ingresó ya está ocupado. Por favor, ingrese un ID mayor que %d.\n", *totPropiedades);
+        return;
+    }
+    
+    struct propiedad nuevaPropiedad;
+    
+    nuevaPropiedad.id = idPersonalizado;
+
+    printf("Fecha de ingreso (dia mes año): ");
+    scanf("%d %d %d", &nuevaPropiedad.fechaIngreso.dia, &nuevaPropiedad.fechaIngreso.mes, &nuevaPropiedad.fechaIngreso.anio);
+
+    printf("Zona: ");
+    scanf("%s", nuevaPropiedad.zona);
+
+    printf("Ciudad: ");
+    scanf("%s", nuevaPropiedad.ciudad);
+
+    printf("Dormitorios: ");
+    scanf("%d", &nuevaPropiedad.dormitorio);
+
+    printf("Baños: ");
+    scanf("%d", &nuevaPropiedad.banios);
+
+    printf("Superficie total: ");
+    scanf("%f", &nuevaPropiedad.sup_total);
+
+    printf("Superficie cubierta: ");
+    scanf("%f", &nuevaPropiedad.sup_cubierta);
+
+    printf("Precio: ");
+    scanf("%f", &nuevaPropiedad.precio);
+
+    printf("Moneda: ");
+    scanf("%s", nuevaPropiedad.moneda);
+
+    printf("Tipo de propiedad: ");
+    scanf("%s", nuevaPropiedad.tipo_propiedad);
+
+    printf("Operación: ");
+    scanf("%s", nuevaPropiedad.operacion);
+
+    printf("Fecha de salida (dia mes año): ");
+    scanf("%d %d %d", &nuevaPropiedad.fechaSalida.dia, &nuevaPropiedad.fechaSalida.mes, &nuevaPropiedad.fechaSalida.anio);
+
+    nuevaPropiedad.estado = 0;
+
+    // Completar los campos restantes con valores predeterminados (0)
+    for (int i = *totPropiedades + 1; i < idPersonalizado; i++) {
+        struct propiedad propiedadVacia = {0};
+        propiedadVacia.id = i;
+        propiedades[i - 1] = propiedadVacia;
+    }
+
+    // Agregar la nueva propiedad al arreglo
+    propiedades[idPersonalizado - 1] = nuevaPropiedad;
+    
+    *totPropiedades = idPersonalizado;
+    printf("Nueva propiedad agregada con éxito.\n");
+}
+
+// Función para imprimir todas las propiedades en forma de tabla
+void imprimirPropiedades(struct propiedad propiedades[], int totPropiedades) {
+    printf("%10s %12s %12s %12s %8s %6s %10s %10s %10s %6s %12s %12s %12s %s\n", "ID", "Fecha Ing.", "Zona", "Ciudad", "Dorm.", "Baños", "Sup. Total", "Sup. Cub.", "Precio", "Moneda", "Tipo Prop.", "Operación", "Fecha Sal.", "Estado");
+    
+    for (int i = 0; i < totPropiedades; i++) {
+        printf("%10d %02d/%02d/%d %12s %12s %8d %6d %10.2f %10.2f %10.2f %6s %12s %12s %02d/%02d/%d %d\n",
+               propiedades[i].id,
+               propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+               propiedades[i].zona,
+               propiedades[i].ciudad,
+               propiedades[i].dormitorio,
+               propiedades[i].banios,
+               propiedades[i].sup_total,
+               propiedades[i].sup_cubierta,
+               propiedades[i].precio,
+               propiedades[i].moneda,
+               propiedades[i].tipo_propiedad,
+               propiedades[i].operacion,
+               propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio,
+               propiedades[i].estado);
+    }
+}
+
+/*
+    /\
+    ||
+    ATENCION NO PUDE PONER LAS FUNCIONES EN LA LIBRERIA ASI QUE LAS PONGO ACA 
+    CAMBIAR DESPUES!!!!!!!!!!!!!!!
+*/
+
+int main(){
+    int opcion; //variable de opción para el switch
+    int sub_opcion;
+    int sub_opcion2;
+    int sub_opcion3;
+    int sub_sub_opcion;
+    int sub_sub_opcion2;
+    int i=0;
+    int IDModif=0;
+    int id; //variable para la búsqueda por id
+    int idAux; //variable auxiliar para la búsqueda por id
+    char tipoPropiedad[50];
+    char tipoOperacion[50];
+    FILE *archivoBinario;
+    FILE *archivoTexto;
+
+    time_t t;
+    struct tm *fecha_actual;
+    char fecha_str[20];
+
+    t = time(NULL);
+    fecha_actual = localtime(&t);
+
+    // Formatea la fecha como "YYYY-MM-DD"
+    strftime(fecha_str, sizeof(fecha_str), "%Y-%m-%d", fecha_actual);
+
+    // Construye el nombre del archivo de texto con la fecha actual
+    char nombreArchivo[50];
+    sprintf(nombreArchivo, "propiedades_bajas_%s.xyz", fecha_str);
+
+    struct propiedad propiedades[] = {
+                    {1, {23, 12, 2019}, "Capital Federal", "San Cristobal", 7, 2, 140.0, 140.0, 153000.0, "USD", "Departamento", "Venta", {6, 2, 2020}, 0},
+                    {2, {21, 11, 2019}, "Capital Federal", "Boedo", 1, 2, 70.0, 58.0, 159000.0, "USD", "PH", "Venta", {5, 1, 2020}, 1},
+                    {3, {1, 11, 2019}, "Capital Federal", "Palermo", 1, 1, 45.0, 45.0, 125000.0, "USD", "Departamento", "Venta", {1, 4, 2020}, 0},
+                    {4, {23, 12, 2019}, "Capital Federal", "Palermo", 1, 1, 85.0, 50.0, 295000.0, "PESOS", "PH", "Alquiler", {1, 4, 2020}, 0},
+                    {5, {11, 3, 2020}, "Bs.As. G.B.A. Zona Sur", "La Plata", 1, 1, 50.0, 35.0, 40000.0, "USD", "Casa", "Venta", {24, 7, 2021}, 0},
+                    {6, {1, 11, 2019}, "Capital Federal", "Villa Crespo", 1, 1, 56.0, 56.0, 150000.0, "USD", "PH", "Venta", {9, 2, 2020}, 0},
+                    {7, {31, 10, 2019}, "Capital Federal", "Villa Crespo", 1, 1, 70.0, 70.0, 159500.0, "USD", "Departamento", "Venta", {1, 4, 2020}, 0},
+                    {8, {31, 10, 2019}, "Capital Federal", "Villa Crespo", 1, 1, 70.0, 70.0, 159500.0, "PESOS", "PH", "Alquiler", {8, 2, 2020}, 0},
+                    {9, {23, 12, 2019}, "Capital Federal", "Parque Patricios", 1, 1, 45.0, 37.0, 2400.0, "USD", "Departamento", "Alquiler temporal", {1, 4, 2020}, 0},
+                    {10, {23, 12, 2019}, "Capital Federal", "Parque Patricios", 1, 1, 45.0, 37.0, 89000.0, "USD", "Casa", "Venta", {5, 1, 2020}, 0},
+                    {11, {7, 12, 2019}, "Capital Federal", "Villa Pueyrred\xA2n", 1, 2, 66.0, 49.0, 170000.0, "USD", "PH", "Venta", {16, 3, 2020}, 0},
+                    {12, {26, 10, 2019}, "Capital Federal", "Boedo", 1, 1, 68.0, 59.0, 149000.0, "PESOS", "Departamento", "Alquiler", {1, 4, 2020}, 0},
+                    {13, {19, 12, 2019}, "Capital Federal", "Boedo", 1, 1, 50.0, 44.0, 115000.0, "USD", "Departamento", "Venta", {28, 3, 2020}, 0},
+                    {14, {30, 11, 2019}, "Bs.As. G.B.A. Zona Norte", "Pilar", 1, 1, 50.0, 35.0, 145000.0, "PESOS", "Departamento", "Alquiler", {1, 4, 2020}, 0},
+                };
+    struct fechasAux auxiliar;//struct auxiliar
+    
+    do {
+        printf("Men%c de opciones inmobiliaria \n", 163);
+        printf("1. Crear archivo binario \n");
+        printf("2. Listado archivo binario \n");
+        printf("3. Alta de propiedad \n");
+        printf("4. B%csqueda de propiedad \n", 163);
+        printf("5. Modificaci%cn de propiedad \n", 162);
+        printf("6. Baja l%cgica de propiedad \n", 162);
+        printf("7. Baja f%csica de propiedad \n", 161);
+        printf("8. Listar bajas \n");
+        printf("9. Cerrar men%c \n", 163);
+        printf("Seleccione una opci%cn: ", 162);
+        scanf("%d", &opcion);
+        printf("\n");
+
+        switch (opcion) {
+            case 1:
+                // Abre un archivo binario para escritura
+                archivoBinario = fopen("propiedades.dat", "ab");
+                if (archivoBinario == NULL) {
+                    perror("Error al abrir el archivo");
+                    return 1;
+                }
+
+                // Calcula el número de elementos en el arreglo propiedades
+                size_t numPropiedades = sizeof(propiedades) / sizeof(propiedades[0]);
+
+                // Escribe las propiedades en el archivo binario
+                for (size_t i = 0; i < numPropiedades; i++) {
+                    fwrite(&propiedades[i], sizeof(struct propiedad), 1, archivoBinario);
+                }
+
+                // Cierra el archivo
+                fclose(archivoBinario);
+                break;
+
+            case 2:
+                do {
+                    printf("1. Listar todo \n");
+                    printf("2. Solo clientes activos \n");
+                    printf("3. Ingreso por teclado de un tipo de propiedad \n");
+                    printf("4. Ingreso de un rango de tiempo de ingreso \n");
+                    printf("5. Volver al men%c principal \n", 163);
+                    printf("Seleccione una opci%cn \n", 162);
+                    scanf("%d", &sub_opcion);
+                    printf("\n");
+
+                    switch (sub_opcion) {
+                        case 1:
+                            i=0;
+                            archivoBinario = fopen("propiedades.dat", "rb");
+                                if (archivoBinario == NULL) {
+                                    perror("Error al abrir el archivo para lectura");
+                                    return 1;
+                                }
+                            
+                            printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                                    "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                                    "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                            while (fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario) == 1 && i<16) {
+                                printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                                    propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                                    propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                                    propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                                i++;
+                            }
+                            fclose(archivoBinario);
+                            break;
+
+                        case 2:
+                            i=0;
+                            //Emite unicamente los que poseen estado ACTIVO
+                            archivoBinario = fopen("propiedades.dat", "rb");
+                                if (archivoBinario == NULL) {
+                                    perror("Error al abrir el archivo para lectura");
+                                    return 1;
+                                }
+                            printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                                    "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                                    "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                            while (fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario) == 1 && i<16) {
+                                if(propiedades[i].estado!=0){
+                                    printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                                        propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                                        propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                                        propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                                    }
+                                i++;
+                            }
+                            fclose(archivoBinario);
+                            break;
+
+                        case 3:
+                            i=0;
+                            // Lista los datos según un tipo de propiedad
+                            archivoBinario = fopen("propiedades.dat", "rb");
+                                if (archivoBinario == NULL) {
+                                    perror("Error al abrir el archivo para lectura");
+                                    return 1;
+                                }
+                            printf("Ingrese el tipo de propiedad: ");
+                            scanf("%s", tipoPropiedad);
+                            fflush(stdin);
+                            printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                                    "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                                    "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                            while (fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario) == 1 && i<16) {
+                                if(strcmp(propiedades[i].tipo_propiedad, tipoPropiedad)==0){
+                                    printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                                        propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                                        propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                                        propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                                    }
+                                i++;
+                            }
+                            fclose(archivoBinario);
+                            break;
+
+                        case 4:
+                            i=0;
+                            // Lista los datos según una fecha de ingreso
+                            archivoBinario = fopen("propiedades.dat", "rb");
+                                if (archivoBinario == NULL) {
+                                    perror("Error al abrir el archivo para lectura");
+                                    return 1;
+                                }
+                            printf("Ingrese la fecha de ingreso (d%ca): ", 161);
+                            scanf("%d", &auxiliar.dia);
+                            while(auxiliar.dia<1||auxiliar.dia>31){ //Verifica que el día sea entre 1 y 31
+                                printf("\nNo es un d%ca v%clido, ingrese otro: ", 161, 160);
+                                scanf("%d", &auxiliar.dia);
+                            }
+                            fflush(stdin);
+                            printf("Ingrese la fecha de ingreso (mes): ");
+                            scanf("%d", &auxiliar.mes);
+                            while(auxiliar.mes<1||auxiliar.mes>12){ //Verifica que el mes sea entre 1 y 12
+                                printf("\nNo es un mes v%clido, ingrese otro: ", 160);
+                                scanf("%d", &auxiliar.mes);
+                            }
+                            if(auxiliar.dia>29&&auxiliar.mes==2){ //Si el día es mayor a 29 y el mes es febrero, vuelve a pedir el mes
+                                while(auxiliar.mes==2){
+                                    printf("\nFebrero no puede tener m%cs de 29 d%cas, ingrese otro: ", 160, 161);
+                                    scanf("%d", &auxiliar.mes);
+                                }
+                            } else if((auxiliar.dia==31)&&
+                                (auxiliar.mes!=1&&auxiliar.mes!=3&&auxiliar.mes!=5&&
+                                auxiliar.mes!=7&&auxiliar.mes!=8&&auxiliar.mes!=10&&
+                                auxiliar.mes!=12)){ //Si el día es igual a 31 y el mes no tiene 31 días, vuelve a pedir el mes   
+                                while(auxiliar.mes!=1&&auxiliar.mes!=3&&auxiliar.mes!=5&&
+                                auxiliar.mes!=7&&auxiliar.mes!=8&&auxiliar.mes!=10&&
+                                auxiliar.mes!=12){
+                                    printf("\nEste mes no puede tener m%cs de 30 d%cas, ingrese otro: ", 160, 161);
+                                    scanf("%d", &auxiliar.mes);
+                                }
+                            }
+                            fflush(stdin);
+                            printf("Ingrese la fecha de ingreso (a%co): ", 164);
+                            scanf("%d", &auxiliar.anio);
+                            while(auxiliar.anio<2000||auxiliar.anio>2023){ //Verifica que el año sea entre 2000 y 2023
+                                printf("\nNo es un a%co v%clido, ingrese otro: ", 164, 160);
+                                scanf("%d", &auxiliar.anio);
+                            }
+                            if((auxiliar.dia==29&&auxiliar.mes==2)&&auxiliar.anio%4!=0){
+                                while(auxiliar.anio%4!=0){ //Si el día es igual a 29, el mes es febrero y el año no es bisiesto, vuelve a pedir el año
+                                    printf("\nNo es un a%co v%clido, ingrese otro: ", 164, 160);
+                                    scanf("%d", &auxiliar.anio);
+                                }
+                            } else if((auxiliar.dia==29&&auxiliar.mes==2)&&(auxiliar.anio%100==0&&auxiliar.anio%400!=0)){
+                                while(auxiliar.anio%100==0&&auxiliar.anio%400!=0){ //Si el día es igual a 29, el mes es febrero y el año no es bisiesto, vuelve a pedir el año
+                                    printf("\nNo es un a%co v%clido, ingrese otro: ", 164, 160);
+                                    scanf("%d", &auxiliar.anio);
+                                }
+                            }
+                            fflush(stdin);
+                            printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                                    "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Baños",
+                                    "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operación", "Fecha Salida");
+                                while (fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario) == 1 && i<16) {
+                                    if(propiedades[i].fechaIngreso.dia == auxiliar.dia &&
+                                        propiedades[i].fechaIngreso.mes == auxiliar.mes &&
+                                        propiedades[i].fechaIngreso.anio == auxiliar.anio){
+                                        printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                                            propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                                            propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                                            propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                                        }
+                                    i++;
+                                }
+                            fclose(archivoBinario);
+                            break;
+
+                        case 5:
+                            printf("Vuelve al men%c principal \n", 163); //Agrego el mensajito para que tire este y no el del default cuando cierra
+                            break;
+
+                        default:
+                            printf("No es una opci%cn v%clida dentro del men%c \n", 162, 160, 163);
+                    }
+                } while (sub_opcion != 5); 
+                break;
+
+            case 3:
+                if (archivoBinario == NULL) {
+                    perror("Error al abrir el archivo");
+                    return 1;
+                }
+                
+                int totPropiedades = sizeof(propiedades) / sizeof(struct propiedad);
+                int idPersonalizado;
+
+                int opcion = 0;
+    
+                    while (opcion != 4) {
+                        printf("1. Agregar nueva propiedad\n");
+                        printf("2. Imprimir propiedades\n");
+                        printf("3. Guardar en archivo binario\n");
+                        printf("4. Salir\n");
+                        printf("Ingrese su opción: ");
+                        scanf("%d", &opcion);
+
+                        switch (opcion) {
+                            case 1:
+                                printf("Ingrese el ID personalizado para la nueva propiedad: ");
+                                scanf("%d", &idPersonalizado);
+                
+                                // Llamar a la función para agregar una nueva propiedad con ID personalizado
+                                agregarPropiedad(propiedades, &totPropiedades, idPersonalizado);
+                                break;
+                
+                            case 2:
+                                // Llamar a la función para imprimir todas las propiedades en forma de tabla
+                                imprimirPropiedades(propiedades, totPropiedades);
+                                break;
+                
+                            case 3:
+                                // Tu código para guardar en un archivo binario
+                                break;
+                
+                            case 4:
+                                printf("Saliendo del programa.\n");
+                                break;
+                
+                            default:
+                                printf("Opción no válida. Por favor, elija una opción válida.\n");
+                                break;
+                        }
+                    }
+                
+            break;
+            
+            case 4:
+                do {
+                    printf("1. B%csqueda por id \n", 163);
+                    printf("2. B%csqueda por tipo de operaci%cn y tipo de propiedad \n", 163, 162);
+                    printf("3. Volver al men%c principal \n", 163);
+                    printf("Selecciona una opci%cn: ", 162);
+                    scanf("%d", &sub_opcion2);
+                    printf("\n");
+
+                    switch (sub_opcion2) {
+                        case 1:
+                            i=0;
+                            // Busca y emite los datos según un id
+                            archivoBinario = fopen("propiedades.dat", "rb");
+                                if (archivoBinario == NULL) {
+                                    perror("Error al abrir el archivo para lectura");
+                                    return 1;
+                                }
+                            printf("Ingrese el ID: ");
+                            scanf("%d", &id);
+                            while(id<1){ // Corrobora que el id sea un número positivo
+                                printf("No es un ID válido\n");
+                                printf("Ingrese el ID: ");
+                                scanf("%d", &id);
+                            }
+                            for(i=0; i<16; i++){ // Le da al id auxiliar el valor del id más grande del struct
+                                idAux=propiedades[i].id;
+                            }
+                            if(id>idAux){ // Si el id ingresado es más grande que el id auxiliar, vuelve a pedirlo
+                                while(id>idAux){
+                                    printf("El ID no existe\n");
+                                    printf("Ingrese el ID: ");
+                                    scanf("%d", &id);
+                                }
+                            }
+                            i=0;
+                            fflush(stdin);
+                            printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                                    "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                                    "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                            while (fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario) == 1 && i<16) {
+                                if(propiedades[i].id==id){
+                                    printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                                        propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                                        propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                                        propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                                    }
+                                i++;
+                            }
+                            fclose(archivoBinario);
+                            break;
+
+                        case 2:
+                            do {
+                                printf("1. Alquiler \n");
+                                printf("2. Venta \n");
+                                printf("3. Alquiler temporal \n");
+                                printf("4. Volver al men%c anterior \n", 163);
+                                printf("Selecciona una opci%cn: ", 162);
+                                scanf("%d", &sub_sub_opcion);
+                                printf("\n");
+
+                                switch (sub_sub_opcion) {
+                                        case 1: 
+                                            do {
+                                                strcpy(tipoOperacion, "Alquiler");
+                                                //Si el usuario busca por alquler, se pide ingresar el tipo de propiedad
+                                                printf("1. PH \n");
+                                                printf("2. Casa \n");
+                                                printf("3. Departamento \n");
+                                                printf("4. Volver al men%c anterior \n", 163);
+                                                printf("Selecciona una opci%cn: ", 162);
+                                                scanf("%d", &sub_sub_opcion2);
+
+                                                switch (sub_sub_opcion2) { 
+                                                    case 1:
+                                                        i=0;
+                                                        strcpy(tipoPropiedad, "PH");
+                                                        archivoBinario = fopen("propiedades.dat", "rb");
+                                                        if (archivoBinario == NULL) {
+                                                            perror("Error al abrir el archivo para lectura");
+                                                            return 1;
+                                                        }
+                                                        printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                                                            "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                                                            "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                                                        while (fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario) == 1 && i<16) {
+                                                            if((strcmp(propiedades[i].tipo_propiedad, tipoPropiedad)==0)&&(strcmp(propiedades[i].operacion, tipoOperacion)==0)){
+                                                                printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                                                                    propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                                                                    propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                                                                    propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                                                            }
+                                                        i++;
+                                                        }
+                                                        fclose(archivoBinario);
+                                                        break;
+                        
+                                                    case 2:
+                                                        i=0;
+                                                        strcpy(tipoPropiedad, "Casa");
+                                                        archivoBinario = fopen("propiedades.dat", "rb");
+                                                        if (archivoBinario == NULL) {
+                                                            perror("Error al abrir el archivo para lectura");
+                                                            return 1;
+                                                        }
+                                                        printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                                                            "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                                                            "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                                                        while (fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario) == 1 && i<16) {
+                                                            if((strcmp(propiedades[i].tipo_propiedad, tipoPropiedad)==0)&&(strcmp(propiedades[i].operacion, tipoOperacion)==0)){
+                                                                printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                                                                    propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                                                                    propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                                                                    propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                                                            }
+                                                        i++;
+                                                        }
+                                                        fclose(archivoBinario);
+                                                        break;
+
+                                                    case 3:
+                                                        i=0;
+                                                        strcpy(tipoPropiedad, "Departamento");
+                                                        archivoBinario = fopen("propiedades.dat", "rb");
+                                                        if (archivoBinario == NULL) {
+                                                            perror("Error al abrir el archivo para lectura");
+                                                            return 1;
+                                                        }
+                                                        printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                                                            "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                                                            "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                                                        while (fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario) == 1 && i<16) {
+                                                            if((strcmp(propiedades[i].tipo_propiedad, tipoPropiedad)==0)&&(strcmp(propiedades[i].operacion, tipoOperacion)==0)){
+                                                                printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                                                                    propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                                                                    propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                                                                    propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                                                            }
+                                                        i++;
+                                                        }
+                                                        fclose(archivoBinario);
+                                                        break;
+
+                                                    case 4:
+                                                         printf("Vuelve al men%c anterior \n", 163); //Agrego el mensajito para que tire este y no el del default cuando cierra
+                                                        break;
+                            
+                                                    default:
+                                                        printf("No es una opci%cn v%clida dentro del men%c \n", 162, 160, 163);
+                                                }
+                                            } while (sub_sub_opcion2 != 4);
+                                            break;
+                        
+                                        case 2:
+                                            do {
+                                                strcpy(tipoOperacion, "Venta");
+                                                //Si el usuario busca por venta, se pide ingresar el tipo de propiedad
+                                                printf("1. PH \n");
+                                                printf("2. Casa \n");
+                                                printf("3. Departamento \n");
+                                                printf("4. Volver al men%c anterior \n", 163);
+                                                printf("Selecciona una opci%cn: ", 162);
+                                                scanf("%d", &sub_sub_opcion2);
+                                                printf("\n");
+
+                                                switch (sub_sub_opcion2) {
+                                                    case 1:
+                                                        i=0;
+                                                        strcpy(tipoPropiedad, "PH");
+                                                        archivoBinario = fopen("propiedades.dat", "rb");
+                                                        if (archivoBinario == NULL) {
+                                                            perror("Error al abrir el archivo para lectura");
+                                                            return 1;
+                                                        }
+                                                        printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                                                            "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                                                            "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                                                        while (fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario) == 1 && i<16) {
+                                                            if((strcmp(propiedades[i].tipo_propiedad, tipoPropiedad)==0)&&(strcmp(propiedades[i].operacion, tipoOperacion)==0)){
+                                                                printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                                                                    propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                                                                    propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                                                                    propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                                                            }
+                                                        i++;
+                                                        }
+                                                        fclose(archivoBinario);
+                                                        break;
+                        
+                                                    case 2:
+                                                        i=0;
+                                                        strcpy(tipoPropiedad, "Casa");
+                                                        archivoBinario = fopen("propiedades.dat", "rb");
+                                                        if (archivoBinario == NULL) {
+                                                            perror("Error al abrir el archivo para lectura");
+                                                            return 1;
+                                                        }
+                                                        printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                                                            "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                                                            "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                                                        while (fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario) == 1 && i<16) {
+                                                            if((strcmp(propiedades[i].tipo_propiedad, tipoPropiedad)==0)&&(strcmp(propiedades[i].operacion, tipoOperacion)==0)){
+                                                                printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                                                                    propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                                                                    propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                                                                    propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                                                            }
+                                                        i++;
+                                                        }
+                                                        fclose(archivoBinario);
+                                                        break;
+
+                                                    case 3:
+                                                        i=0;
+                                                        strcpy(tipoPropiedad, "Departamento");
+                                                        archivoBinario = fopen("propiedades.dat", "rb");
+                                                        if (archivoBinario == NULL) {
+                                                            perror("Error al abrir el archivo para lectura");
+                                                            return 1;
+                                                        }
+                                                        printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                                                            "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                                                            "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                                                        while (fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario) == 1 && i<14) {
+                                                            if((strcmp(propiedades[i].tipo_propiedad, tipoPropiedad)==0)&&(strcmp(propiedades[i].operacion, tipoOperacion)==0)){
+                                                                printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                                                                    propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                                                                    propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                                                                    propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                                                            }
+                                                        i++;
+                                                        }
+                                                        fclose(archivoBinario);
+                                                        break;
+
+                                                    case 4:
+                                                         printf("Vuelve al men%c anterior \n", 163); //Agrego el mensajito para que tire este y no el del default cuando cierra
+                                                        break;
+                            
+                                                    default:
+                                                        printf("No es una opci%cn v%clida dentro del men%c \n", 162, 160, 163);
+                                                }
+                                            } while (sub_sub_opcion2 != 4);
+                                            break;
+                        
+                                        case 3:
+                                            do {
+                                                strcpy(tipoOperacion, "Alquiler temporal");
+                                                //Si el usuario busca por alquler temporal, se pide ingresar el tipo de propiedad
+                                                printf("1. PH \n");
+                                                printf("2. Casa \n");
+                                                printf("3. Departamento \n");
+                                                printf("4. Volver al men%c anterior \n", 163);
+                                                printf("Selecciona una opci%cn: ", 162);
+                                                scanf("%d", &sub_sub_opcion2);
+                                                printf("\n");
+
+                                                switch (sub_sub_opcion2) {
+                                                    case 1:
+                                                        i=0;
+                                                        strcpy(tipoPropiedad, "PH");
+                                                        archivoBinario = fopen("propiedades.dat", "rb");
+                                                        if (archivoBinario == NULL) {
+                                                            perror("Error al abrir el archivo para lectura");
+                                                            return 1;
+                                                        }
+                                                        printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                                                            "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                                                            "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                                                        while (fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario) == 1 && i<14) {
+                                                            if((strcmp(propiedades[i].tipo_propiedad, tipoPropiedad)==0)&&(strcmp(propiedades[i].operacion, tipoOperacion)==0)){
+                                                                printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                                                                    propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                                                                    propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                                                                    propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                                                            }
+                                                        i++;
+                                                        }
+                                                        fclose(archivoBinario);
+                                                        break;
+                        
+                                                    case 2:
+                                                        i=0;
+                                                        strcpy(tipoPropiedad, "Casa");
+                                                        archivoBinario = fopen("propiedades.dat", "rb");
+                                                        if (archivoBinario == NULL) {
+                                                            perror("Error al abrir el archivo para lectura");
+                                                            return 1;
+                                                        }
+                                                        printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                                                            "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                                                            "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                                                        while (fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario) == 1 && i<14) {
+                                                            if((strcmp(propiedades[i].tipo_propiedad, tipoPropiedad)==0)&&(strcmp(propiedades[i].operacion, tipoOperacion)==0)){
+                                                                printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                                                                    propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                                                                    propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                                                                    propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                                                            }
+                                                        i++;
+                                                        }
+                                                        fclose(archivoBinario);
+                                                        break;
+
+                                                    case 3:
+                                                        i=0;
+                                                        strcpy(tipoPropiedad, "Departamento");
+                                                        archivoBinario = fopen("propiedades.dat", "rb");
+                                                        if (archivoBinario == NULL) {
+                                                            perror("Error al abrir el archivo para lectura");
+                                                            return 1;
+                                                        }
+                                                        printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                                                            "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                                                            "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                                                        while (fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario) == 1 && i<14) {
+                                                            if((strcmp(propiedades[i].tipo_propiedad, tipoPropiedad)==0)&&(strcmp(propiedades[i].operacion, tipoOperacion)==0)){
+                                                                printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                                                                    propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                                                                    propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                                                                    propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                                                            }
+                                                        i++;
+                                                        }
+                                                        fclose(archivoBinario);
+                                                        break;
+
+                                                    case 4:
+                                                         printf("Vuelve al men%c anterior \n", 163); //Agrego el mensajito para que tire este y no el del default cuando cierra
+                                                        break;
+                            
+                                                    default:
+                                                        printf("No es una opci%cn v%clida dentro del men%c \n", 162, 160, 163);
+                                                }
+                                            } while (sub_sub_opcion2 != 4);
+                                            break;
+
+                                        case 4:
+                                            printf("Vuelve al men%c anterior \n", 163); //Agrego el mensajito para que tire este y no el del default cuando cierra
+                                            break;
+                            
+                                        default:
+                                        printf("No es una opci%cn v%clida dentro del men%c \n", 162, 160, 163);
+                                }
+                            } while (sub_sub_opcion != 4);
+                            break;
+
+                        case 3:
+                            printf("Vuelve al men%c principal \n", 163); //Agrego el mensajito para que tire este y no el del default cuando cierra
+                            break;
+
+                        default:
+                            printf("No es una opci%cn v%clida dentro del men%c \n", 162, 160, 163);
+                    }
+                } while (sub_opcion2 != 3);
+
+            case 5:
+                do {
+                    printf("1. Modificar ciudad/barrio \n");
+                    printf("2. Modificar precio \n");
+                    printf("3. Modificar fecha de salida \n");
+                    printf("4. Volver al men%c principal \n", 163);
+                    printf("Selecciona una opci%cn: ", 162);
+                    scanf("%d", &sub_opcion3);
+                    printf("\n");
+
+                    switch (sub_opcion3) {
+                        case 1:
+                            archivoBinario = fopen("propiedades.dat", "rb");
+                            if (archivoBinario == NULL) {
+                                perror("Error al abrir el archivo para lectura");
+                                return 1;
+                            }
+                            printf("Ingrese el ID de la propiedad a modificar: ");
+                            scanf(" %d", &IDModif);
+                            IDModif= IDModif-1;
+                            fseek(archivoBinario, IDModif * sizeof(struct propiedad), SEEK_SET); //Busco la posición del struct en el archivo
+                            fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario); //Leo el struct existente
+                            printf("\nIngrese la nueva ciudad/barrio: ");
+                            scanf("%s", propiedades[IDModif].ciudad); //Modifico los campos del struct
+                            fseek(archivoBinario, IDModif * sizeof(struct propiedad), SEEK_SET);//Me posiciono de nuevo en la ubicación original del struct en el archivo
+                            fwrite(&propiedades, sizeof(struct propiedad), 1, archivoBinario); //Escribo el struct modificado en el archivo
+                            fclose(archivoBinario);
+                            break;
+                        
+                        case 2:
+                            archivoBinario = fopen("propiedades.dat", "rb");
+                            if (archivoBinario == NULL) {
+                                perror("Error al abrir el archivo para lectura");
+                                return 1;
+                            }
+                            printf("Ingrese el ID de la propiedad a modificar: ");
+                            scanf(" %d", &IDModif);
+                            IDModif= IDModif-1;
+                            fseek(archivoBinario, IDModif * sizeof(struct propiedad), SEEK_SET); //Busco la posición del struct en el archivo
+                            fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario); //Leo el struct existente
+                            printf("\nIngrese el nuevo precio: ");
+                            scanf(" %f", &propiedades[IDModif].precio); //Modifico los campos del struct
+                            fseek(archivoBinario, IDModif * sizeof(struct propiedad), SEEK_SET);//Me posiciono de nuevo en la ubicación original del struct en el archivo
+                            fwrite(&propiedades, sizeof(struct propiedad), 1, archivoBinario); //Escribo el struct modificado en el archivo
+                            fclose(archivoBinario); 
+                            break;
+
+                        case 3:
+                            archivoBinario = fopen("propiedades.dat", "rb");
+                                if (archivoBinario == NULL) {
+                                    perror("Error al abrir el archivo para lectura");
+                                    return 1;
+                                }
+                            printf("Ingrese el ID de la propiedad a modificar: ");
+                            scanf(" %d", &IDModif);
+                            IDModif= IDModif-1;
+                            fseek(archivoBinario, IDModif * sizeof(struct propiedad), SEEK_SET); //Busco la posición del struct en el archivo
+                            fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario); //Leo el struct existente
+                            printf("\nIngrese la nueva fecha: ");
+                            printf("Ingrese la fecha de salida (dd/mm/yyyy): ");
+                            scanf("%d/%d/%d", &propiedades[IDModif].fechaSalida.dia, &propiedades[IDModif].fechaSalida.mes, &propiedades[IDModif].fechaSalida.anio);
+                            fflush(stdin);
+                            // Valida la fecha de salida
+                            if (!validarFecha(&propiedades[IDModif].fechaSalida)) {
+                                printf("Error: Fecha de salida inválida o futura.\n");
+                                return;
+                            }
+                            fseek(archivoBinario, IDModif * sizeof(struct propiedad), SEEK_SET);//Me posiciono de nuevo en la ubicación original del struct en el archivo
+                            fwrite(&propiedades, sizeof(struct propiedad), 1, archivoBinario); //Escribo el struct modificado en el archivo
+                            fclose(archivoBinario);  
+                            break;
+                        
+                        case 4:
+                            printf("Vuelve al men%c principal \n", 163); //Agrego el mensajito para que tire este y no el del default cuando cierra
+                            break;
+                            
+                        default:
+                            printf("No es una opci%cn v%clida dentro del men%c \n", 162, 160, 163);
+                    }
+                } while (sub_opcion3 != 4);
+
+            case 6: ;
+                // aca punto 9
+
+                int idBuscado;
+                printf("Ingrese el ID de la propiedad que quiere dar de baja: ");
+                scanf("%d",&idBuscado); //id que se va a buscar
+                fflush(stdin);
+
+                struct propiedad *propiedadEncontrada = NULL; //puntero a la propiedad que se va a dar de baja
+                int nroPropiedades = calcularNumeroPropiedades(); //cantidad de propiedades actualmente registradas
+                int encontrado = 0;
+                for (i=0;i<nroPropiedades;i++){
+                    if (propiedades[i].id == idBuscado){
+                        encontrado = 1;
+                        propiedadEncontrada = &propiedades[i];
+                        break;
+                    } 
+                }
+
+                if (encontrado == 0){
+                    printf("No se encontro una propiedad con el id ingresado");
+                    return;
+                }
+                //printeo de la propiedad a dar de baja
+                printf("Propiedad encontrada: \n");
+                printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                        "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                        "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                            propiedadEncontrada->id, propiedadEncontrada->fechaIngreso.dia, propiedadEncontrada->fechaIngreso.mes, propiedadEncontrada->fechaIngreso.anio,
+                            propiedadEncontrada->zona, propiedadEncontrada->ciudad, propiedadEncontrada->dormitorio, propiedadEncontrada->banios, propiedadEncontrada->sup_total, propiedadEncontrada->sup_cubierta, propiedadEncontrada->precio,
+                            propiedadEncontrada->moneda, propiedadEncontrada->tipo_propiedad, propiedadEncontrada->operacion, propiedadEncontrada->fechaSalida.dia, propiedadEncontrada->fechaSalida.mes, propiedadEncontrada->fechaSalida.anio);
+                //confirmacion de la baja 
+                char confirmacion;
+                printf("%cEst%c seguro de que desea dar de baja la propiedad? (S/N) \n",168,160);
+                scanf("%c",&confirmacion);
+                //guardado de la baja en el struct y archivo binario
+                if(confirmacion == 's' || confirmacion == 'S') {
+                    propiedadEncontrada->estado = 0;
+
+                    FILE *archivoBinario = fopen("propiedades.dat", "r+b");
+                    if (archivoBinario == NULL) {
+                        perror("Error al abrir el archivo");
+                        return;
+                    }
+
+                    long offset = (id - 1) * sizeof(struct propiedad);
+                    fseek(archivoBinario, offset, SEEK_SET);
+                    fwrite(propiedadEncontrada, sizeof(struct propiedad), 1, archivoBinario);
+                    fclose(archivoBinario);
+                    printf ("La propiedad se ha dado de baja correctamente");
+                } else {
+                    printf("La propiedad no se ha dado de baja");
+                }
+                i=0;
+                printf("Las propiedades activas actualmente: \n");
+                //Emite unicamente los que poseen estado ACTIVO
+                archivoBinario = fopen("propiedades.dat", "rb");
+                    if (archivoBinario == NULL) {
+                        perror("Error al abrir el archivo para lectura");
+                        return 1;
+                    }
+                printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                        "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                        "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                while (fread(&propiedades, sizeof(struct propiedad), 1, archivoBinario) == 1 && i<nroPropiedades) {
+                    if(propiedades[i].estado!=0){
+                        printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                            propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                            propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                            propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                        }
+                    i++;
+                }
+                fclose(archivoBinario);
+            break;
+
+            case 7:
+                // aca punto 10
+                archivoBinario = fopen("propiedades.dat", "rb");
+                if (archivoBinario == NULL) {
+                    perror("Error al abrir el archivo");
+                    return 1;
+                } else {
+                        fread(propiedades, sizeof(struct propiedad), 14, archivoBinario); //Leo el archivo binario
+                        fclose(archivoBinario);
+
+                        //Abro el archivo de texto
+                        archivoTexto = fopen(nombreArchivo, "w");
+                        if (archivoTexto == NULL) {
+                        perror("Error al abrir el archivo");
+                        return 1;
+                        } else {
+                            fprintf(archivoTexto, "%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                                "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                                "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                            for (i = 0; i < 14; i++) {
+                                if (propiedades[i].estado==0){ //Si la propiedad está dada de baja escribo en el archivo de texto el contenido del archivo binario
+                                    fprintf(archivoTexto, "%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                                        propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                                        propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                                        propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                                }
+                            }
+                            // Cierra el archivo
+                            fclose(archivoTexto);
+                        } 
+                }
+                break;
+
+            case 8:
+                //aca punto 11
+                i=0;
+                archivoTexto = fopen(nombreArchivo, "r");
+                if (archivoTexto == NULL) {
+                    perror("Error al abrir el archivo para lectura");
+                    return 1;
+                }
+                            
+                printf("%-3s %-12s %-20s %-20s %-11s %-6s %-12s %-14s %-10s %-5s %-25s %-12s %-6s\n",
+                        "ID", "Fecha Ingreso", "Zona", "Ciudad", "Dormitorios", "Ba\xA4os",
+                        "Sup. Total", "Sup. Cubierta", "Precio", "Moneda", "Tipo Propiedad", "Operaci\xA2n", "Fecha Salida");
+                while (fscanf(archivoTexto, "%d %d/%d/%d %49s %49s %d %d %f %f %f %6s %24s %24s %d/%d/%d\n", 
+                    &propiedades[i].id, &propiedades[i].fechaIngreso.dia, &propiedades[i].fechaIngreso.mes, &propiedades[i].fechaIngreso.anio,
+                    propiedades[i].zona, propiedades[i].ciudad, &propiedades[i].dormitorio, &propiedades[i].banios, &propiedades[i].sup_total, &propiedades[i].sup_cubierta, &propiedades[i].precio,
+                    propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, &propiedades[i].fechaSalida.dia, &propiedades[i].fechaSalida.mes, &propiedades[i].fechaSalida.anio) == 1) {
+                    printf("%-3d %02d/%02d/%4d %-20s %-20s %-11d %-6d %-12.2f %-14.2f %-10.2f %-5s %-25s %-12s %02d/%02d/%4d\n",
+                        propiedades[i].id, propiedades[i].fechaIngreso.dia, propiedades[i].fechaIngreso.mes, propiedades[i].fechaIngreso.anio,
+                        propiedades[i].zona, propiedades[i].ciudad, propiedades[i].dormitorio, propiedades[i].banios, propiedades[i].sup_total, propiedades[i].sup_cubierta, propiedades[i].precio,
+                        propiedades[i].moneda, propiedades[i].tipo_propiedad, propiedades[i].operacion, propiedades[i].fechaSalida.dia, propiedades[i].fechaSalida.mes, propiedades[i].fechaSalida.anio);
+                    i++;
+                }
+                fclose(archivoTexto);
+                break;
+
+            case 9:
+                printf("Sale del programa \n"); //Agrego el mensajito para que tire este y no el del default cuando cierra
+                break;
+
+            default:
+                printf("La opci%cn no se encuentra dentro del men%c \n", 162, 163);
+        }
+    } while (opcion != 9);
+    
+return 0;
+}
